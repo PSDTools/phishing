@@ -1,0 +1,69 @@
+---
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  merge_group:
+  schedule:
+    - cron: "0 14 * * 1" # every monday at 9 in the morning CST
+  workflow_dispatch:
+
+permissions:
+  contents: read # Needed to clone the repository
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: true
+  DENO_VERSION: v2.1.7
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # Needed for deployment
+
+    steps:
+      - name: 📚 Git checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          submodules: recursive
+          clean: true
+          persist-credentials: false
+          set-safe-directory: true
+      - name: 🦕 Install Deno
+        uses: denoland/setup-deno@909cc5acb0fdd60627fb858598759246509fa755 # v2.0.2
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: 📦 Cache dependencies
+        run: deno install --frozen
+      - name: 🕵️ Run linter, verify formatting, typecheck
+        run: deno task check
+      - name: 🔨 Build
+        run: deno task build
+      - name: 🔧 Upload to Deno Deploy
+        id: deno-deploy
+        uses: denoland/deployctl@7bded90d0d09cd99bbfb513966146315db97618b # 1.13.1
+        with:
+          project: "phishing"
+          entrypoint: main.ts
+          include: |
+            _fresh/
+            static/
+            routes/
+            deno.json
+            deno.lock
+            main.ts
+            tailwind.config.ts
+            utils.ts

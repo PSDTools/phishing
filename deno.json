@@ -1,6 +1,15 @@
 {
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "check": {
+      "dependencies": [
+        "format",
+        "lint",
+        "typecheck"
+      ]
+    },
+    "format": "deno fmt --check",
+    "lint": "deno lint",
+    "typecheck": "deno check **/*.ts **/*.tsx",
     "dev": "deno run -A --watch=static/,routes/ dev.ts",
     "build": "deno run -A dev.ts build",
     "start": "deno run -A main.ts",
