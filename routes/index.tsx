@@ -60,8 +60,8 @@ function formatNumber(num: number): string {
 
 export default define.page<typeof handler>(function Home({ data }) {
   return (
-    <div class="px-4 py-8 m-auto fresh-gradient">
-      <div class="max-w-screen-md h-screen mx-auto flex flex-col items-center justify-center">
+    <div class="m-auto fresh-gradient">
+      <div class="mx-auto flex h-screen max-w-screen-md flex-col items-center justify-center px-4 py-8">
         <p class="my-4">
           You're the {formatNumber(data.clicks)} person to be Phished!
         </p>
