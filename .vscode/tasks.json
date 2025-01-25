@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "deno",
+      "command": "task",
+      "args": [
+        "dev"
+      ],
+      "problemMatcher": [
+        "$deno"
+      ],
+      "label": "deno: dev",
+      "detail": "$ deno run -A --watch=static/,routes/ dev.ts",
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    }
+  ]
+}
