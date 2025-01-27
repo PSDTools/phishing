@@ -4,11 +4,11 @@ import { getCookies, setCookie } from "@std/http/cookie";
 
 const db = await Deno.openKv();
 
-const key = ["clicks", "main"];
+const key = ["clicks", "insecure"];
 
 export const handler = define.handlers({
   GET: async (ctx): Promise<PageResponse<{ clicks: number }>> => {
-    const cookie = getCookies(ctx.req.headers)["Clicked"];
+    const cookie = getCookies(ctx.req.headers)["Clicked-Insecure"];
 
     let clicksRes;
 
@@ -29,7 +29,11 @@ export const handler = define.handlers({
     const headers = new Headers();
 
     if (ctx.config.mode === "production") {
-      setCookie(headers, { name: "Clicked", value: "true", path: "/" });
+      setCookie(headers, {
+        name: "Clicked-Insecure",
+        value: "true",
+        path: "/",
+      });
     }
 
     return page({
@@ -63,9 +67,17 @@ export default define.page<typeof handler>(function Home({ data }) {
     <div class="m-auto fresh-gradient">
       <div class="mx-auto flex h-screen max-w-screen-md flex-col items-center justify-center px-4 py-8">
         <p class="my-4">
-          You're the {formatNumber(data.clicks)} person to be Phished!
+          Ha Ha! Don’t click sus links.
           <br />
-          Click <a href="/insecure">here</a> to learn more about cybersecurity.
+          You're the {formatNumber(data.clicks)} person to be double-Phished!
+          <br />
+          This one’s safe, I promise.
+          Click<a href="https://consumer.ftc.gov/articles/how-recognize-and-avoid-phishing-scams">
+            here
+          </a>{" "}
+          to actually learn more about cybersecurity. You can also take{" "}
+          <a href="https://phishingquiz.withgoogle.com/">this quiz</a>
+          to try to spot more phishing.
         </p>
       </div>
     </div>
