@@ -1,8 +1,7 @@
 import { page, type PageResponse } from "fresh";
 import { define } from "../utils.ts";
 import { getCookies, setCookie } from "@std/http/cookie";
-
-const db = await Deno.openKv();
+import { db } from "../utils/db.ts";
 
 const key = ["clicks", "main"];
 
@@ -10,20 +9,17 @@ export const handler = define.handlers({
   GET: async (ctx): Promise<PageResponse<{ clicks: number }>> => {
     const cookie = getCookies(ctx.req.headers)["Clicked"];
 
-    let clicksRes;
-
-    try {
-      clicksRes = await db.get<number>(key);
-    } catch {
-      await db.atomic().set(key, 0).commit();
-      clicksRes = await db.get<number>(key);
-    }
+    const clicksRes = await db.get<number>(key).catch(() => undefined);
 
     if (cookie === undefined) {
-      await db.atomic().check(clicksRes).set(
-        key,
-        clicksRes.value! + 1,
-      ).commit();
+      if (clicksRes !== undefined) {
+        await db.atomic().check(clicksRes).set(
+          key,
+          clicksRes.value! + 1,
+        ).commit();
+      } else {
+        await db.set(key, 1);
+      }
     }
 
     const headers = new Headers();
@@ -33,10 +29,12 @@ export const handler = define.handlers({
     }
 
     return page({
-      clicks: cookie === undefined ? clicksRes.value! + 1 : clicksRes.value!,
-    }, {
-      headers,
-    });
+      clicks: clicksRes === undefined
+        ? 0
+        : cookie === undefined
+        ? clicksRes.value! + 1
+        : clicksRes.value!,
+    }, { headers });
   },
 });
 

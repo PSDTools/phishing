@@ -1,46 +1,43 @@
 import { page, type PageResponse } from "fresh";
 import { define } from "../utils.ts";
 import { getCookies, setCookie } from "@std/http/cookie";
+import { db } from "../utils/db.ts";
 
-const db = await Deno.openKv();
-
-const key = ["clicks", "insecure"];
+export const key = ["clicks", "insecure"];
 
 export const handler = define.handlers({
   GET: async (ctx): Promise<PageResponse<{ clicks: number }>> => {
     const cookie = getCookies(ctx.req.headers)["Clicked-Insecure"];
 
-    let clicksRes;
-
-    try {
-      clicksRes = await db.get<number>(key);
-    } catch {
-      await db.atomic().set(key, 0).commit();
-      clicksRes = await db.get<number>(key);
-    }
+    const clicksRes = await db.get<number>(key).catch(() => undefined);
 
     if (cookie === undefined) {
-      await db.atomic().check(clicksRes).set(
-        key,
-        clicksRes.value! + 1,
-      ).commit();
+      if (clicksRes !== undefined) {
+        await db.atomic().check(clicksRes).set(
+          key,
+          clicksRes.value! + 1,
+        ).commit();
+      } else {
+        await db.set(key, 1);
+      }
     }
-
     const headers = new Headers();
 
     if (ctx.config.mode === "production") {
       setCookie(headers, {
         name: "Clicked-Insecure",
         value: "true",
-        path: "/",
+        path: "/insecure/",
       });
     }
 
     return page({
-      clicks: cookie === undefined ? clicksRes.value! + 1 : clicksRes.value!,
-    }, {
-      headers,
-    });
+      clicks: clicksRes === undefined
+        ? 0
+        : cookie === undefined
+        ? clicksRes.value! + 1
+        : clicksRes.value!,
+    }, { headers });
   },
 });
 

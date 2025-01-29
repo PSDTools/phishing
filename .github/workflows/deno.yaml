@@ -62,6 +62,7 @@ jobs:
             _fresh/
             static/
             routes/
+            utils/
             deno.json
             deno.lock
             main.ts
